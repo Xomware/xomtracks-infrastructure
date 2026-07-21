@@ -4,6 +4,12 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
+    # Generates the two purely-internal secrets (ingest bearer key,
+    # API_SECRET_KEY) in-stack -- see random.tf and ssm.tf.
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.6"
+    }
   }
 
   backend "s3" {

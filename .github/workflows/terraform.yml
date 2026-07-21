@@ -56,19 +56,16 @@ jobs:
         # Tee to disk so the comment step can read it without stuffing the
         # whole plan into argv/env (Linux ARG_MAX = 128KB combined; large
         # plans blow past that).
+        #
+        # No TF_VAR_* secrets needed -- an earlier version of this
+        # workflow wired 5 app secrets via TF_VAR_XOMTRACKS_* GitHub
+        # secrets that were never set, which is what caused the first real
+        # apply to fail (empty string passed Terraform's own validation
+        # but AWS SSM's PutParameter API rejects an empty Value). Fixed at
+        # the Terraform layer instead (see ssm.tf/random.tf) so this
+        # workflow no longer depends on any repo secret beyond AWS creds.
         run: terraform plan -no-color -input=false -lock=false 2>&1 | tee /tmp/tf-plan.txt
         continue-on-error: true
-        env:
-          # Empty if the repo secret isn't set yet -- fine for a plan-only
-          # review checkpoint (SSM params get created with placeholder
-          # values); Dom needs to set the real secrets before `apply`
-          # actually persists usable credentials. Matches
-          # meals-infrastructure's TF_VAR_api_secret_key convention.
-          TF_VAR_spotify_client_id: ${{ secrets.XOMTRACKS_SPOTIFY_CLIENT_ID }}
-          TF_VAR_spotify_client_secret: ${{ secrets.XOMTRACKS_SPOTIFY_CLIENT_SECRET }}
-          TF_VAR_soundcloud_client_id: ${{ secrets.XOMTRACKS_SOUNDCLOUD_CLIENT_ID }}
-          TF_VAR_ingest_bearer_key: ${{ secrets.XOMTRACKS_INGEST_BEARER_KEY }}
-          TF_VAR_api_secret_key: ${{ secrets.XOMTRACKS_API_SECRET_KEY }}
 
       - name: Comment Plan on PR
         uses: actions/github-script@v7
@@ -93,9 +90,3 @@ jobs:
       - name: Terraform Apply
         if: github.ref == 'refs/heads/master' && github.event_name == 'push'
         run: terraform apply -auto-approve -input=false
-        env:
-          TF_VAR_spotify_client_id: ${{ secrets.XOMTRACKS_SPOTIFY_CLIENT_ID }}
-          TF_VAR_spotify_client_secret: ${{ secrets.XOMTRACKS_SPOTIFY_CLIENT_SECRET }}
-          TF_VAR_soundcloud_client_id: ${{ secrets.XOMTRACKS_SOUNDCLOUD_CLIENT_ID }}
-          TF_VAR_ingest_bearer_key: ${{ secrets.XOMTRACKS_INGEST_BEARER_KEY }}
-          TF_VAR_api_secret_key: ${{ secrets.XOMTRACKS_API_SECRET_KEY }}

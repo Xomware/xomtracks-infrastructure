@@ -125,43 +125,25 @@ variable "authorizer_timeout" {
 }
 
 # ============================================
-# App secrets -- no defaults (empty string if unset). Wired via TF_VAR_*
-# in .github/workflows/terraform.yml from GitHub Actions secrets, matching
-# xomify-infrastructure / meals-infrastructure's api_secret_key convention.
-# Dom needs to set the real values as repo secrets before `terraform apply`
-# actually persists usable credentials -- an empty-string plan is fine for
-# the plan-only review checkpoint this phase stops at.
+# App secrets
+#
+# REMOVED as of the SSM-fix pass (see ssm.tf's per-resource comments):
+# spotify_client_id / spotify_client_secret / soundcloud_client_id /
+# ingest_bearer_key / api_secret_key are no longer Terraform variables.
+# The first apply attempt sourced all five from no-default variables wired
+# via TF_VAR_* GitHub secrets that were never set -> resolved to an empty
+# string -> `terraform plan`/`validate` accepted that silently, but AWS
+# SSM's real `PutParameter` API rejects an empty Value outright
+# (ValidationException: length >= 1), which is exactly what failed on the
+# first real apply. Each of the five now has its value resolved a
+# different way that doesn't depend on a human-supplied Terraform
+# variable: Spotify creds are a placeholder Dom sets once via the AWS CLI
+# (own-app requirement, can't be generated); SoundCloud's client_id is
+# mirrored from xomcloud's existing scraped value via a data source;
+# the ingest bearer key and API_SECRET_KEY are generated in-stack
+# (random.tf) since both are purely-internal secrets with no external
+# registration step.
 # ============================================
-
-variable "spotify_client_id" {
-  description = "Xomtracks' OWN Spotify Web API Client ID (self-contained per PLAN.md Option 3 -- not xomify's app)."
-  type        = string
-  sensitive   = true
-}
-
-variable "spotify_client_secret" {
-  description = "Xomtracks' OWN Spotify Web API Client Secret."
-  type        = string
-  sensitive   = true
-}
-
-variable "soundcloud_client_id" {
-  description = "Scraped SoundCloud client_id (xomcloud pattern) -- used by the cross-platform matcher to resolve SoundCloud metadata."
-  type        = string
-  sensitive   = true
-}
-
-variable "ingest_bearer_key" {
-  description = "Scoped bearer key the local extractor sends to POST /shares/ingest. NOT the Cognito-validated user JWT -- a separate shared secret."
-  type        = string
-  sensitive   = true
-}
-
-variable "api_secret_key" {
-  description = "HS256 signing key for auth_login's minted JWT."
-  type        = string
-  sensitive   = true
-}
 
 variable "app_service_user_email" {
   description = "Email key for xomtracks' single Spotify-connected service-account user row (the app plays/searches/builds playlists through this one account -- not a per-browsing-user OAuth flow)."
