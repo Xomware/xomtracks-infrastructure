@@ -1,10 +1,12 @@
 ########################################
 # Xomtracks API Lambdas -- one per handler in xomtracks-backend/lambdas/.
 #
-# `authorization` on an endpoint is carried through to apigateway.tf so the
-# api-gateway-service module can override the module-level default
-# (CUSTOM) to NONE for public routes -- same pattern as xomforms'
-# lambda.tf / xomify's lambdas_music.tf.
+# `authorization` on an endpoint is carried through to apigateway.tf.
+# Authed routes use the native COGNITO_USER_POOLS authorizer (validated
+# directly by API Gateway against the shared xomware_users pool -- see
+# data_cognito.tf and the module block in apigateway.tf, matching
+# meals-infrastructure / xomforms-infrastructure). Public routes override
+# to NONE.
 #
 # PATH DESIGN NOTE: the api-gateway-service module (v2.7.0) supports
 # exactly two path levels -- a service `path_prefix` and one `path_part`
@@ -47,14 +49,14 @@ locals {
       description   = "Browse shares by direction + time window (authed)"
       path_part     = "list"
       http_method   = "GET"
-      authorization = "CUSTOM"
+      authorization = "COGNITO_USER_POOLS"
     },
     {
       name          = "match_override"
       description   = "Manual match-override for a share -- POST /shares/{shareId} (authed)"
       path_part     = "{shareId}"
       http_method   = "POST"
-      authorization = "CUSTOM"
+      authorization = "COGNITO_USER_POOLS"
     },
   ]
 }

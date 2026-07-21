@@ -111,19 +111,6 @@ variable "owner" {
   default     = "domgiordano"
 }
 
-# Authorizer-specific settings
-variable "authorizer_memory_size" {
-  description = "Memory size for authorizer Lambda in MB"
-  type        = number
-  default     = 256
-}
-
-variable "authorizer_timeout" {
-  description = "Timeout for authorizer Lambda in seconds"
-  type        = number
-  default     = 30
-}
-
 # ============================================
 # App secrets
 #

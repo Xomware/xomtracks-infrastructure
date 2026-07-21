@@ -37,27 +37,7 @@ resource "aws_iam_role_policy" "api_gateway_cloudwatch_role_policy" {
   policy = data.aws_iam_policy_document.api_gateway_cloudwatch_policy.json
 }
 
-# ============================================
-# API Gateway -> Authorizer Lambda invoke role
-# API Gateway assumes this role to invoke the custom authorizer Lambda.
-# ============================================
-
-data "aws_iam_policy_document" "apigw_authorizer_invoke_policy" {
-  statement {
-    effect    = "Allow"
-    actions   = ["lambda:InvokeFunction"]
-    resources = [aws_lambda_function.authorizer.arn]
-  }
-}
-
-resource "aws_iam_role" "apigw_authorizer_invoke" {
-  name               = "${var.app_name}-apigw-authorizer-invoke"
-  tags               = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-apigw-authorizer-invoke" }))
-  assume_role_policy = data.aws_iam_policy_document.api_gateway_assume_role.json
-}
-
-resource "aws_iam_role_policy" "apigw_authorizer_invoke" {
-  name   = "${var.app_name}-apigw-authorizer-invoke-policy"
-  role   = aws_iam_role.apigw_authorizer_invoke.id
-  policy = data.aws_iam_policy_document.apigw_authorizer_invoke_policy.json
-}
+# NOTE: the API-Gateway-assumes-role-to-invoke-authorizer-Lambda wiring was
+# removed when authed routes moved to the native COGNITO_USER_POOLS
+# authorizer. API Gateway validates Cognito JWTs itself -- there is no
+# authorizer Lambda to invoke.
