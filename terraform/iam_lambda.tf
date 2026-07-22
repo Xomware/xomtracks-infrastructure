@@ -12,53 +12,10 @@ data "aws_iam_policy_document" "lambda_assume_role" {
   }
 }
 
-# ============================================
-# Authorizer Lambda IAM Role
-# Minimal permissions -- CloudWatch + X-Ray only. Like xomforms' ported
-# authorizer, this validates Cognito JWTs against a JWKS URL baked into its
-# environment variables at deploy time (see locals.tf), so no runtime SSM
-# access is needed.
-# ============================================
-
-resource "aws_iam_role" "authorizer_role" {
-  name               = "${var.app_name}-authorizer-exec"
-  tags               = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-authorizer-exec" }))
-  assume_role_policy = data.aws_iam_policy_document.lambda_assume_role.json
-}
-
-data "aws_iam_policy_document" "authorizer_role_policy" {
-  # CloudWatch Logs
-  statement {
-    effect = "Allow"
-    actions = [
-      "logs:CreateLogGroup",
-      "logs:CreateLogStream",
-      "logs:PutLogEvents"
-    ]
-    resources = [
-      "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:log-group:/aws/lambda/${var.app_name}-authorizer",
-      "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:log-group:/aws/lambda/${var.app_name}-authorizer:*"
-    ]
-  }
-
-  # X-Ray Tracing
-  statement {
-    effect = "Allow"
-    actions = [
-      "xray:PutTraceSegments",
-      "xray:PutTelemetryRecords",
-      "xray:GetSamplingRules",
-      "xray:GetSamplingTargets"
-    ]
-    resources = ["*"]
-  }
-}
-
-resource "aws_iam_role_policy" "authorizer_role_policy" {
-  name   = "${var.app_name}-authorizer-role-policy"
-  role   = aws_iam_role.authorizer_role.id
-  policy = data.aws_iam_policy_document.authorizer_role_policy.json
-}
+# NOTE: the authorizer Lambda execution role was removed when authed routes
+# moved to the native COGNITO_USER_POOLS authorizer -- there is no
+# authorizer Lambda to run. API Gateway validates Cognito JWTs against the
+# shared xomware_users pool directly (see data_cognito.tf, apigateway.tf).
 
 # ============================================
 # API Lambda IAM Role (auth_login, shares_ingest, shares_list,

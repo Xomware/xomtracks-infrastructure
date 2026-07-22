@@ -7,12 +7,11 @@
 # xomtracks-backend -- lambdas/common/matching.py, spotify.py, and
 # playlist.py (the logic each cron would call) are built and unit-tested,
 # but no `cron_token_keepalive/`, `cron_rolling_playlists/`, or
-# `cron_matching_sweep/` handler.py has been written. This mirrors exactly
-# how xomforms-infrastructure defined its authorizer Lambda resource
-# before that Lambda's Python source existed (see authorizer.tf) -- the
-# Terraform resource + schedule is real and applyable now (references the
-# generic stub zip, deploys real code later via CI), but these three
-# cron Lambdas will run stub code until their handlers are written.
+# `cron_matching_sweep/` handler.py has been written. Same stub-zip pattern
+# every freshly-scaffolded Lambda in this repo uses -- the Terraform
+# resource + schedule is real and applyable now (references the generic
+# stub zip, deploys real code later via CI), but these three cron Lambdas
+# will run stub code until their handlers are written.
 #
 # 3.3 (matching trigger) resolves PLAN.md's Open Question in favor of a
 # periodic sweep of `pending` rows over a post-ingest synchronous Lambda
