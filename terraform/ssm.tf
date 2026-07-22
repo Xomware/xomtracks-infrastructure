@@ -1,41 +1,50 @@
-# SPOTIFY -- xomtracks' OWN app credentials (self-contained per PLAN.md
-# Option 3, NOT xomify's -- deliberately not cross-referencing
-# /xomify/spotify/* even though that param exists and is populated. PLAN.md
-# is explicit that xomtracks needs its own registered Spotify app ("clean
-# app boundary with zero risk to the deployed xomify" -- sharing xomify's
-# client_id/secret would put every xomtracks API call under xomify's
-# Spotify app dashboard/quota/scopes, exactly what Option 3 was chosen to
-# avoid).
+# SPOTIFY -- MIRRORED from xomify's existing registered Spotify app
+# credentials, NOT a separate xomtracks app. This reverses the earlier
+# "Option 3 / self-contained own app" decision: Dom is explicitly opting
+# to REUSE xomify's Spotify app creds (client_id/secret) rather than
+# register a second Spotify app for xomtracks. Reuse is preferred -- it
+# means zero Dom action (no new app to register, no REPLACE_ME to fill in)
+# and one Spotify app dashboard to manage. Both apps are Dom's own personal
+# projects under the same Spotify developer account, so there's no
+# cross-tenant concern.
 #
-# PLACEHOLDER value, NOT sourced from a variable -- an earlier version of
-# this file sourced these from `var.spotify_client_id`/`var.spotify_client_secret`
-# with no Terraform default, wired via TF_VAR_* from GitHub secrets that
-# were never set; those resolved to an empty string in CI, which
-# `terraform plan`/`validate` accepted but AWS SSM's real `PutParameter`
-# API rejected outright (`ValidationException: Value must have length >=
-# 1`) -- the exact failure from the first apply attempt. A real secret
-# requires a human to register a Spotify app for Xomtracks; Terraform
-# can't generate one. `ignore_changes = [value]` so this placeholder is
-# only ever written ONCE -- Dom sets the real value out-of-band via the AWS
-# CLI (see xomtracks-infrastructure's PR description for the exact
-# commands) and subsequent `terraform apply` runs never fight it back to
-# the placeholder.
+# Sourced exactly like the SoundCloud credential below is sourced from
+# xomcloud: a cross-app `data "aws_ssm_parameter"` read of the existing,
+# populated `/xomify/spotify/*` params (confirmed live, non-empty, set
+# 2025-03-03). Materialized under xomtracks' OWN SSM path
+# (/xomtracks/spotify/*) -- read directly by the already-shipped
+# xomtracks-backend code (lambdas/common expects /xomtracks/spotify/*) and
+# covered by this app's existing IAM scoping (ssm:GetParameter limited to
+# /xomtracks/*), so neither the backend nor IAM needs any change.
+#
+# Deliberately NOT `ignore_changes = [value]` -- if xomify ever rotates its
+# Spotify client secret, the next `terraform apply` here picks up the new
+# value automatically rather than silently going stale (same rationale as
+# SoundCloud's mirror below).
+data "aws_ssm_parameter" "xomify_spotify_client_id" {
+  name = "/xomify/spotify/CLIENT_ID"
+}
+
+data "aws_ssm_parameter" "xomify_spotify_client_secret" {
+  name = "/xomify/spotify/CLIENT_SECRET"
+}
+
 resource "aws_ssm_parameter" "spotify_client_id" {
   name        = "/${var.app_name}/spotify/CLIENT_ID"
-  description = "Xomtracks' own Spotify Web API Client ID -- PLACEHOLDER until Dom sets the real value (see PR description for the aws ssm put-parameter command)"
+  description = "Spotify Web API Client ID -- mirrored from xomify's existing registered app credential"
   type        = "SecureString"
-  value       = "REPLACE_ME"
+  value       = data.aws_ssm_parameter.xomify_spotify_client_id.value
 
-  lifecycle { ignore_changes = [tags, tags_all, value] }
+  lifecycle { ignore_changes = [tags, tags_all] }
 }
 
 resource "aws_ssm_parameter" "spotify_client_secret" {
   name        = "/${var.app_name}/spotify/CLIENT_SECRET"
-  description = "Xomtracks' own Spotify Web API Client Secret -- PLACEHOLDER until Dom sets the real value (see PR description for the aws ssm put-parameter command)"
+  description = "Spotify Web API Client Secret -- mirrored from xomify's existing registered app credential"
   type        = "SecureString"
-  value       = "REPLACE_ME"
+  value       = data.aws_ssm_parameter.xomify_spotify_client_secret.value
 
-  lifecycle { ignore_changes = [tags, tags_all, value] }
+  lifecycle { ignore_changes = [tags, tags_all] }
 }
 
 # SOUNDCLOUD -- MIRRORED from xomcloud's existing scraped client_id, not a
