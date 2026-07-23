@@ -38,6 +38,16 @@ locals {
       authorization = l.authorization
     }
   ]
+
+  playlists_endpoints = [
+    for l in local.playlists_lambdas : {
+      name          = l.name
+      path_part     = l.path_part
+      http_method   = l.http_method
+      invoke_arn    = aws_lambda_function.playlists[l.name].invoke_arn
+      authorization = l.authorization
+    }
+  ]
 }
 
 module "api" {
@@ -58,7 +68,8 @@ module "api" {
   certificate_arn = aws_acm_certificate_validation.api.certificate_arn
 
   services = {
-    auth   = { path_prefix = "auth", endpoints = local.auth_endpoints }
-    shares = { path_prefix = "shares", endpoints = local.shares_endpoints }
+    auth      = { path_prefix = "auth", endpoints = local.auth_endpoints }
+    shares    = { path_prefix = "shares", endpoints = local.shares_endpoints }
+    playlists = { path_prefix = "playlists", endpoints = local.playlists_endpoints }
   }
 }
