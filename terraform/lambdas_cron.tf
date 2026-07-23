@@ -13,6 +13,15 @@
 # stub zip, deploys real code later via CI), but these three cron Lambdas
 # will run stub code until their handlers are written.
 #
+# AUTO-HEARD (added later): reads Dom's Spotify recently-played via the same
+# service token the playlists crons use (Dom's, in xomtracks-users) and marks
+# matching tracks heard for Dom in xomtracks-heard. Uses the SAME
+# cron_lambda_role -- it already grants DynamoDB read/write on the whole
+# `xomtracks*` ARN prefix (covers xomtracks-heard) and SSM read on /xomtracks/*
+# (Spotify creds) -- so NO IAM change is needed. Requires the
+# `user-read-recently-played` scope on the reused xomify refresh token (verified
+# present); a scope regression surfaces as a 403 that fails the cron loud.
+#
 # 3.3 (matching trigger) resolves PLAN.md's Open Question in favor of a
 # periodic sweep of `pending` rows over a post-ingest synchronous Lambda
 # invoke -- simpler infra (no ingest-handler-invokes-matcher wiring), and
@@ -40,6 +49,12 @@ locals {
       description      = "Periodic sweep of pending shares -- resolves cross-platform matches (Spotify/SoundCloud/Apple -> Spotify)"
       cron_schedule    = "rate(10 minutes)"
       cron_description = "Triggers a matching sweep of pending shares every 10 minutes"
+    },
+    {
+      name             = "auto-heard"
+      description      = "Reads Dom's Spotify recently-played and auto-marks matching tracks heard for Dom (Dom-only; per-user OAuth is a fast-follow)"
+      cron_schedule    = "rate(30 minutes)"
+      cron_description = "Triggers the auto-heard job every 30 minutes (Spotify recently-played -> heard for Dom)"
     },
   ]
 }

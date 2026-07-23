@@ -27,7 +27,9 @@ locals {
     SHARES_SHARER_INDEX    = "sharerHandle-messageDate-index"
     USERS_TABLE_NAME       = aws_dynamodb_table.users.id
     RATINGS_TABLE_NAME     = aws_dynamodb_table.ratings.id
+    HEARD_TABLE_NAME       = aws_dynamodb_table.heard.id
     APP_SERVICE_USER_EMAIL = var.app_service_user_email
+    AUTO_HEARD_RATER_EMAIL = var.auto_heard_rater_email
     AWS_ACCOUNT_ID         = data.aws_caller_identity.web_app_account.account_id
 
     # Shared Cognito pool (see data_cognito.tf) -- the ported authorizer

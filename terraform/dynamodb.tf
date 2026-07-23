@@ -153,3 +153,53 @@ resource "aws_dynamodb_table" "ratings" {
 
   tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-ratings" }))
 }
+
+########################################
+# 4. xomtracks-heard  (per-(track, user) LISTEN state -- additive, NEW table)
+# PK: trackKey   -- normalized SONG identity so a "heard" flag follows the SONG
+#     across ALL of its share instances, NOT per-share. Identical key shape to
+#     xomtracks-ratings (see track_key.py::derive_track_key).
+# SK: raterEmail -- the Cognito email of the listener. One item per (track, user)
+#     => a member has exactly one heard row per song; toggling is a plain upsert.
+# attrs (non-key): heard (bool), heardAt (epoch "when heard"), updatedAt (epoch).
+#
+# Unlike ratings there is NO aggregate: heard is a PER-CALLER boolean, so the
+# feed enrichment reads only the caller's own row per track (default False when
+# absent -- a GetItem per unique trackKey; see xomtracks-backend/lambdas/common/
+# heard_dynamo.py). Backs POST /heard/set, the auto-heard EventBridge cron, and
+# the inline `heard` enrichment on /shares/list + /me/shares.
+#
+# Name matches the `${var.app_name}*` ARN prefix the existing lambda_role AND
+# cron_lambda_role already grant DynamoDB read/write on (see iam_lambda.tf) -- so
+# NO IAM change is needed, same as xomtracks-ratings/users. Standard pattern:
+# PAY_PER_REQUEST + KMS + PITR + standard_tags.
+########################################
+resource "aws_dynamodb_table" "heard" {
+  name           = "${var.app_name}-heard"
+  billing_mode   = "PAY_PER_REQUEST"
+  read_capacity  = 0
+  write_capacity = 0
+  hash_key       = "trackKey"
+  range_key      = "raterEmail"
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_alias.dynamodb.target_key_arn
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  attribute {
+    name = "trackKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "raterEmail"
+    type = "S"
+  }
+
+  tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-heard" }))
+}

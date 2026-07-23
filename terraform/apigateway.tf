@@ -68,6 +68,16 @@ locals {
       authorization = l.authorization
     }
   ]
+
+  heard_endpoints = [
+    for l in local.heard_lambdas : {
+      name          = l.name
+      path_part     = l.path_part
+      http_method   = l.http_method
+      invoke_arn    = aws_lambda_function.heard[l.name].invoke_arn
+      authorization = l.authorization
+    }
+  ]
 }
 
 module "api" {
@@ -93,5 +103,6 @@ module "api" {
     playlists = { path_prefix = "playlists", endpoints = local.playlists_endpoints }
     me        = { path_prefix = "me", endpoints = local.me_endpoints }
     ratings   = { path_prefix = "ratings", endpoints = local.ratings_endpoints }
+    heard     = { path_prefix = "heard", endpoints = local.heard_endpoints }
   }
 }
