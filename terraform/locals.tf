@@ -26,6 +26,7 @@ locals {
     SHARES_DIRECTION_INDEX = "direction-messageDate-index"
     SHARES_SHARER_INDEX    = "sharerHandle-messageDate-index"
     USERS_TABLE_NAME       = aws_dynamodb_table.users.id
+    RATINGS_TABLE_NAME     = aws_dynamodb_table.ratings.id
     APP_SERVICE_USER_EMAIL = var.app_service_user_email
     AWS_ACCOUNT_ID         = data.aws_caller_identity.web_app_account.account_id
 

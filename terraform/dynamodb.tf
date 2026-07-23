@@ -101,3 +101,55 @@ resource "aws_dynamodb_table" "users" {
 
   tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-users" }))
 }
+
+########################################
+# 3. xomtracks-ratings  (whole-group song ratings -- additive, NEW table)
+# PK: trackKey   -- normalized SONG identity so a rating follows the SONG
+#     across ALL of its share instances, NOT per-share. Prefers
+#     `spotify:<resolvedSpotifyId>`; falls back to a normalized `url:<...>`
+#     for unmatched tracks (see xomtracks-backend/lambdas/common/track_key.py
+#     ::derive_track_key).
+# SK: raterEmail -- the Cognito email of the rater. One item per (track, user)
+#     => a member has exactly one rating per song; re-rating is a plain upsert.
+#
+# Aggregate {avg, count} is computed by Query-ing the trackKey PARTITION (every
+# rater row for a song lives together), which also yields the caller's own row
+# in the same read -- no denormalized counter to drift. Cheap at friend-group
+# scale; a denormalized `#AGG` row is the documented fast-follow if fan-out
+# ever costs. Backs POST /ratings/set + GET /ratings/get and the inline
+# `rating` enrichment on /shares/list + /me/shares.
+#
+# Name matches the `${var.app_name}*` ARN prefix the existing lambda_role
+# already grants DynamoDB read/write on (see iam_lambda.tf) -- so NO IAM change
+# is needed, same as xomtracks-users. Standard pattern: PAY_PER_REQUEST + KMS +
+# PITR + standard_tags.
+########################################
+resource "aws_dynamodb_table" "ratings" {
+  name           = "${var.app_name}-ratings"
+  billing_mode   = "PAY_PER_REQUEST"
+  read_capacity  = 0
+  write_capacity = 0
+  hash_key       = "trackKey"
+  range_key      = "raterEmail"
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_alias.dynamodb.target_key_arn
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  attribute {
+    name = "trackKey"
+    type = "S"
+  }
+
+  attribute {
+    name = "raterEmail"
+    type = "S"
+  }
+
+  tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-ratings" }))
+}
