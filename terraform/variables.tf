@@ -153,3 +153,14 @@ variable "auto_heard_rater_email" {
   type        = string
   default     = "dominickj.giordano@gmail.com"
 }
+
+# The single admin (Dom) permitted to hit the /admin/* phone-link approval
+# routes. The admin lambdas' require_admin gate 403s any caller whose Cognito
+# email != this, on top of the native COGNITO_USER_POOLS authorizer. This is
+# also the recipient of the phone-link-request notification email (SES). Read by
+# the backend as env ADMIN_EMAIL (see locals.tf lambda_variables + constants.py).
+variable "admin_email" {
+  description = "Cognito login email of the single admin allowed to list/approve/deny phone-link requests (also the notification recipient)."
+  type        = string
+  default     = "dominickj.giordano@gmail.com"
+}

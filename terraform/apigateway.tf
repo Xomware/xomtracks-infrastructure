@@ -78,6 +78,16 @@ locals {
       authorization = l.authorization
     }
   ]
+
+  admin_endpoints = [
+    for l in local.admin_lambdas : {
+      name          = l.name
+      path_part     = l.path_part
+      http_method   = l.http_method
+      invoke_arn    = aws_lambda_function.admin[l.name].invoke_arn
+      authorization = l.authorization
+    }
+  ]
 }
 
 module "api" {
@@ -104,5 +114,6 @@ module "api" {
     me        = { path_prefix = "me", endpoints = local.me_endpoints }
     ratings   = { path_prefix = "ratings", endpoints = local.ratings_endpoints }
     heard     = { path_prefix = "heard", endpoints = local.heard_endpoints }
+    admin     = { path_prefix = "admin", endpoints = local.admin_endpoints }
   }
 }
