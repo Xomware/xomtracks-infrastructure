@@ -58,6 +58,16 @@ locals {
       authorization = l.authorization
     }
   ]
+
+  ratings_endpoints = [
+    for l in local.ratings_lambdas : {
+      name          = l.name
+      path_part     = l.path_part
+      http_method   = l.http_method
+      invoke_arn    = aws_lambda_function.ratings[l.name].invoke_arn
+      authorization = l.authorization
+    }
+  ]
 }
 
 module "api" {
@@ -82,5 +92,6 @@ module "api" {
     shares    = { path_prefix = "shares", endpoints = local.shares_endpoints }
     playlists = { path_prefix = "playlists", endpoints = local.playlists_endpoints }
     me        = { path_prefix = "me", endpoints = local.me_endpoints }
+    ratings   = { path_prefix = "ratings", endpoints = local.ratings_endpoints }
   }
 }
