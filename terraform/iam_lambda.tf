@@ -142,6 +142,28 @@ data "aws_iam_policy_document" "lambda_role_policy" {
       "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:table/${var.app_name}*/index/*"
     ]
   }
+
+  # SES -- send admin notification emails for the phone-link approval flow
+  # (POST /me/link-phone -> email Dom). Scoped to xomtracks' OWN domain
+  # identity + configuration set (see ses.tf); the FromEmailAddress condition
+  # further restricts sends to the verified noreply@xomtracks.xomware.com
+  # sender. No other Lambda sends mail, but the shared api lambda_role covers
+  # me_link_phone so it lives here.
+  statement {
+    effect = "Allow"
+    actions = [
+      "ses:SendEmail"
+    ]
+    resources = [
+      aws_sesv2_email_identity.xomtracks.arn,
+      "arn:aws:ses:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:configuration-set/${aws_sesv2_configuration_set.xomtracks.configuration_set_name}"
+    ]
+    condition {
+      test     = "StringEquals"
+      variable = "ses:FromAddress"
+      values   = [local.ses_from_address]
+    }
+  }
 }
 
 resource "aws_iam_role_policy" "lambda_role_policy" {

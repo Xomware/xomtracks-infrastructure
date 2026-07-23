@@ -203,3 +203,51 @@ resource "aws_dynamodb_table" "heard" {
 
   tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-heard" }))
 }
+
+########################################
+# 5. xomtracks-link-requests  (pending phone-link requests -- additive, NEW table)
+# PK: requestId (uuid4)
+# attrs (non-key): requesterEmail (Cognito caller), phone (NORMALIZED last-10
+#   digits), savedName (Dom's saved contact name for the number, or absent),
+#   sub (Cognito sub, optional), status ("pending"|"approved"|"denied"),
+#   createdAt (epoch), updatedAt (epoch).
+#
+# Backs the ADMIN-APPROVAL rework of phone linking: a member's POST /me/link-phone
+# no longer auto-links (trust-based) -- it creates a PENDING row here, and the
+# admin (Dom) approves/denies it via GET /admin/requests + POST /admin/approve|deny
+# (see lambda_admin.tf). Approval writes the real link to xomtracks-users via the
+# existing user_links logic; denial writes nothing.
+#
+# No GSI: the admin queue (list pending) and GET /me/get's "pending" check are
+# both filtered Scans -- the right tool at friend-group scale, matching the
+# scan_shares_by_match_status precedent. A status GSI is the documented
+# fast-follow if request volume grows.
+#
+# Name matches the `${var.app_name}*` ARN prefix the existing lambda_role already
+# grants DynamoDB read/write on (see iam_lambda.tf) -- so NO IAM change is needed
+# for table access, same as xomtracks-ratings/heard/users. Standard pattern:
+# PAY_PER_REQUEST + KMS + PITR + standard_tags.
+########################################
+resource "aws_dynamodb_table" "link_requests" {
+  name           = "${var.app_name}-link-requests"
+  billing_mode   = "PAY_PER_REQUEST"
+  read_capacity  = 0
+  write_capacity = 0
+  hash_key       = "requestId"
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_alias.dynamodb.target_key_arn
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  attribute {
+    name = "requestId"
+    type = "S"
+  }
+
+  tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-link-requests" }))
+}
