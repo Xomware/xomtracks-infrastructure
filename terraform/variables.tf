@@ -137,3 +137,19 @@ variable "app_service_user_email" {
   type        = string
   default     = "xomtracks-app@xomware.com"
 }
+
+# The Cognito LOGIN email the auto-heard cron marks recently-played tracks heard
+# FOR. Distinct from app_service_user_email (the Spotify service-account row):
+# heard rows must be keyed by the email a user SIGNS INTO the app with so they
+# surface in that user's own "unheard" filter on /shares/list. Dom-only for now
+# (the single service token's recently-played is DOM's history); per-user
+# Spotify OAuth is the documented fast-follow. Read by the backend as env
+# AUTO_HEARD_RATER_EMAIL (see locals.tf lambda_variables + constants.py).
+#
+# NOTE (Dom): confirm this equals your actual Cognito login email before apply
+# -- if it doesn't match, auto-heard rows won't appear in your feed filter.
+variable "auto_heard_rater_email" {
+  description = "Cognito login email the auto-heard cron marks recently-played tracks heard for (Dom-only for now)."
+  type        = string
+  default     = "dominickj.giordano@gmail.com"
+}

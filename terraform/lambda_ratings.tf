@@ -19,8 +19,9 @@
 #
 # Folder -> function name (deploy-backend.yml first-underscore split:
 # DOMAIN=ratings, REST=<rest>):
-#   lambdas/ratings_set -> xomtracks-ratings-set
-#   lambdas/ratings_get -> xomtracks-ratings-get
+#   lambdas/ratings_set  -> xomtracks-ratings-set
+#   lambdas/ratings_get  -> xomtracks-ratings-get
+#   lambdas/ratings_list -> xomtracks-ratings-list
 #
 # ROUTE NOTE (2-path-level module constraint): the api-gateway-service module
 # (v2.7.0) supports exactly two path levels -- a service `path_prefix`
@@ -45,6 +46,13 @@ locals {
       name          = "get"
       description   = "Batch aggregate ratings + the caller's own rating per trackKey (authed) -- GET /ratings/get?trackKeys=a,b,c"
       path_part     = "get"
+      http_method   = "GET"
+      authorization = "COGNITO_USER_POOLS"
+    },
+    {
+      name          = "list"
+      description   = "Every track the caller has rated, across BOTH directions, with track info + rating value (authed) -- GET /ratings/list"
+      path_part     = "list"
       http_method   = "GET"
       authorization = "COGNITO_USER_POOLS"
     },

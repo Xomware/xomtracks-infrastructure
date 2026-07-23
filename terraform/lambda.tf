@@ -52,6 +52,13 @@ locals {
       authorization = "COGNITO_USER_POOLS"
     },
     {
+      name          = "recent"
+      description   = "Compact most-recent shares (shared-with-me + shared-by-me) for the xomware.com hub widget (authed) -- GET /shares/recent?limit=5"
+      path_part     = "recent"
+      http_method   = "GET"
+      authorization = "COGNITO_USER_POOLS"
+    },
+    {
       name          = "match_override"
       description   = "Manual match-override for a share -- POST /shares/{shareId} (authed)"
       path_part     = "{shareId}"
