@@ -40,8 +40,14 @@ locals {
     # only the SHA-256 hash of each token; the ingest handler resolves a
     # presented token -> ownerId (dual-accepting the legacy SSM key -> Dom).
     INGEST_TOKENS_TABLE_NAME = aws_dynamodb_table.ingest_tokens.id
-    APP_SERVICE_USER_EMAIL   = var.app_service_user_email
-    AUTO_HEARD_RATER_EMAIL   = var.auto_heard_rater_email
+    # Admin-portal calls & errors dashboard (WS6). TTL'd request-log table +
+    # its retention window. The shared request_log hook writes one item per
+    # authed request (fail-open); GET /admin/calls aggregates it. IAM already
+    # covers this table (xomtracks* prefix); no grant change.
+    REQUEST_LOG_TABLE_NAME = aws_dynamodb_table.request_log.id
+    REQUEST_LOG_TTL_DAYS   = var.request_log_ttl_days
+    APP_SERVICE_USER_EMAIL = var.app_service_user_email
+    AUTO_HEARD_RATER_EMAIL = var.auto_heard_rater_email
     # Single admin allowed to hit /admin/* (require_admin gates on caller email
     # == this). Also who the phone-link notification email is sent TO.
     ADMIN_EMAIL    = var.admin_email
