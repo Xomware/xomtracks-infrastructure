@@ -46,21 +46,21 @@ locals {
       description   = "List pending phone-link requests for the admin queue (admin-gated) -- GET /admin/requests"
       path_part     = "requests"
       http_method   = "GET"
-      authorization = "COGNITO_USER_POOLS"
+      authorization = "NONE"
     },
     {
       name          = "approve"
       description   = "Approve a pending link request -- creates the real link + marks approved (admin-gated) -- POST /admin/approve"
       path_part     = "approve"
       http_method   = "POST"
-      authorization = "COGNITO_USER_POOLS"
+      authorization = "NONE"
     },
     {
       name          = "deny"
       description   = "Deny a pending link request -- marks denied, no link (admin-gated) -- POST /admin/deny"
       path_part     = "deny"
       http_method   = "POST"
-      authorization = "COGNITO_USER_POOLS"
+      authorization = "NONE"
     },
   ]
 }

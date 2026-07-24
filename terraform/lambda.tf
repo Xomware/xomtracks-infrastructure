@@ -2,11 +2,13 @@
 # Xomtracks API Lambdas -- one per handler in xomtracks-backend/lambdas/.
 #
 # `authorization` on an endpoint is carried through to apigateway.tf.
-# Authed routes use the native COGNITO_USER_POOLS authorizer (validated
-# directly by API Gateway against the shared xomware_users pool -- see
-# data_cognito.tf and the module block in apigateway.tf, matching
-# meals-infrastructure / xomforms-infrastructure). Public routes override
-# to NONE.
+# WS-AUTH: xomify is the sole frontend (homegrown HS256 JWT, no Cognito), so
+# EVERY route is `NONE` at the gateway and each handler validates the caller's
+# Bearer token IN-HANDLER via xomify_auth.verify_xomify_token -- the same
+# in-handler pattern the ingest route already uses for its SSM bearer key. The
+# Cognito authorizer is gone (module-level authorization is NONE). Per-service
+# lambda_*.tf headers below still narrate the OLD Cognito model in prose; the
+# authorization VALUES here (and in each locals block) are the source of truth.
 #
 # PATH DESIGN NOTE: the api-gateway-service module (v2.7.0) supports
 # exactly two path levels -- a service `path_prefix` and one `path_part`
@@ -49,14 +51,14 @@ locals {
       description   = "Start per-user Spotify OAuth -- return the authorize URL + stamp a CSRF state (authed)"
       path_part     = "spotify-login"
       http_method   = "POST"
-      authorization = "COGNITO_USER_POOLS"
+      authorization = "NONE"
     },
     {
       name          = "spotify_callback"
       description   = "Finish per-user Spotify OAuth -- verify state, exchange code, store the owner's refresh token (authed)"
       path_part     = "spotify-callback"
       http_method   = "POST"
-      authorization = "COGNITO_USER_POOLS"
+      authorization = "NONE"
     },
   ]
 
@@ -76,14 +78,14 @@ locals {
       description   = "Mint a per-user extractor ingest token -- return the plaintext once, store only its hash (authed)"
       path_part     = "create"
       http_method   = "POST"
-      authorization = "COGNITO_USER_POOLS"
+      authorization = "NONE"
     },
     {
       name          = "revoke"
       description   = "Revoke one of the caller's ingest tokens by hash (or plaintext), scoped to the caller's ownerId (authed)"
       path_part     = "revoke"
       http_method   = "POST"
-      authorization = "COGNITO_USER_POOLS"
+      authorization = "NONE"
     },
   ]
 
@@ -100,21 +102,21 @@ locals {
       description   = "Browse shares by direction + time window (authed)"
       path_part     = "list"
       http_method   = "GET"
-      authorization = "COGNITO_USER_POOLS"
+      authorization = "NONE"
     },
     {
       name          = "recent"
-      description   = "Compact most-recent shares (shared-with-me + shared-by-me) for the xomware.com hub widget (authed) -- GET /shares/recent?limit=5"
+      description   = "Compact most-recent shares (shared-with-me + shared-by-me) for the PUBLIC xomware.com hub showcase, owner-scoped in-handler -- GET /shares/recent?limit=5"
       path_part     = "recent"
       http_method   = "GET"
-      authorization = "COGNITO_USER_POOLS"
+      authorization = "NONE"
     },
     {
       name          = "match_override"
       description   = "Manual match-override for a share -- POST /shares/{shareId} (authed)"
       path_part     = "{shareId}"
       http_method   = "POST"
-      authorization = "COGNITO_USER_POOLS"
+      authorization = "NONE"
     },
   ]
 }

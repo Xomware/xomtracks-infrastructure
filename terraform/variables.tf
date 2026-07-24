@@ -88,7 +88,7 @@ variable "api_stage_name" {
 variable "cors_allowed_origins" {
   description = "Comma-delimited allowed CORS origins for the API. First entry is the default Access-Control-Allow-Origin; additional entries are echoed back via startsWith matching by the api module."
   type        = string
-  default     = "https://xomtracks.xomware.com,https://xomware.com,https://www.xomware.com"
+  default     = "https://xomtracks.xomware.com,https://xomify.xomware.com,https://xomware.com,https://www.xomware.com"
 }
 
 # Route53
