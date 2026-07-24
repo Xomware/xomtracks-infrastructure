@@ -186,5 +186,5 @@ variable "default_owner_id" {
 variable "owner_scoping_enabled" {
   description = "Feature flag: when true, /shares/list scopes to the caller's own ownerId via GSI-3 (multi-tenant). False = legacy GSI-1 path (instant rollback)."
   type        = string
-  default     = "false"
+  default     = "true"
 }
