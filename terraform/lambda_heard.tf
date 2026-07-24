@@ -37,7 +37,7 @@ locals {
       description   = "Upsert the caller's heard flag for a song; return the fresh per-caller heard state (authed) -- POST /heard/set"
       path_part     = "set"
       http_method   = "POST"
-      authorization = "COGNITO_USER_POOLS"
+      authorization = "NONE"
     },
   ]
 }

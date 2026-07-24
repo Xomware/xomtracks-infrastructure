@@ -9,19 +9,16 @@ resource "aws_api_gateway_account" "api_gateway_account" {
 #**********************
 
 locals {
-  # `authorization` is carried through per-endpoint so the module can mix
-  # auth types on one API: authed routes use the native COGNITO_USER_POOLS
-  # authorizer (validated by API Gateway against the shared xomware_users
-  # pool -- see data_cognito.tf and the module block below, matching
-  # meals-infrastructure), while public routes override to NONE. The ingest
-  # route is NONE at the API Gateway layer -- auth for it happens INSIDE the
-  # handler via the SSM-scoped bearer key
-  # (utility_helpers.require_ingest_bearer_key), not Cognito. The auth/login
-  # route is also NONE (it MINTS xomtracks' own Spotify-derived token; it is
-  # not gated by Cognito). NOTE: the Phase-2 auth/spotify-login +
-  # auth/spotify-callback routes ARE COGNITO_USER_POOLS (per-endpoint
-  # authorization is carried through from local.auth_lambdas) -- the caller's
-  # Cognito identity binds the OAuth CSRF state + owns the stored refresh token.
+  # `authorization` is carried through per-endpoint. WS-AUTH: xomify is the
+  # SOLE frontend and authenticates via a homegrown HS256 JWT (claims email +
+  # userId, secret at SSM /xomify/api/API_SECRET_KEY) -- there is NO Cognito.
+  # So EVERY route is now `NONE` at the API Gateway layer and each handler
+  # validates the caller's Bearer token IN-HANDLER via
+  # xomify_auth.verify_xomify_token (mirroring how the ingest route already
+  # validates its SSM-scoped bearer key in-handler). The module-level
+  # authorization is NONE too, so the previously-provisioned Cognito authorizer
+  # is removed (needs_cognito_authorizer -> false). /shares/recent is also NONE
+  # -- it is the PUBLIC hub showcase, server-side-scoped to the showcase owner.
   auth_endpoints = [
     for l in local.auth_lambdas : {
       name          = l.name
@@ -108,7 +105,7 @@ module "api" {
 
   app_name      = var.app_name
   stage_name    = var.api_stage_name
-  authorization = "COGNITO_USER_POOLS"
+  authorization = "NONE"
   cognito_user_pool_arns = [
     data.aws_ssm_parameter.cognito_user_pool_arn.value
   ]

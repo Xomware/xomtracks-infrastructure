@@ -40,21 +40,21 @@ locals {
       description   = "Upsert the caller's 1-5 rating for a song; return the aggregate {avg,count,myRating} (authed) -- POST /ratings/set"
       path_part     = "set"
       http_method   = "POST"
-      authorization = "COGNITO_USER_POOLS"
+      authorization = "NONE"
     },
     {
       name          = "get"
       description   = "Batch aggregate ratings + the caller's own rating per trackKey (authed) -- GET /ratings/get?trackKeys=a,b,c"
       path_part     = "get"
       http_method   = "GET"
-      authorization = "COGNITO_USER_POOLS"
+      authorization = "NONE"
     },
     {
       name          = "list"
       description   = "Every track the caller has rated, across BOTH directions, with track info + rating value (authed) -- GET /ratings/list"
       path_part     = "list"
       http_method   = "GET"
-      authorization = "COGNITO_USER_POOLS"
+      authorization = "NONE"
     },
   ]
 }

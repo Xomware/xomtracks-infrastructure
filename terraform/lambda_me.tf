@@ -37,21 +37,21 @@ locals {
       description   = "Link the caller's phone handle to their Cognito identity; report matched-share count (authed)"
       path_part     = "link-phone"
       http_method   = "POST"
-      authorization = "COGNITO_USER_POOLS"
+      authorization = "NONE"
     },
     {
       name          = "get"
       description   = "Caller's linked handles + share count (authed) -- GET /me/get (module 2-level path; see header)"
       path_part     = "get"
       http_method   = "GET"
-      authorization = "COGNITO_USER_POOLS"
+      authorization = "NONE"
     },
     {
       name          = "shares"
       description   = "Caller's OWN shares by linked handle, windowed, newest-first (authed)"
       path_part     = "shares"
       http_method   = "GET"
-      authorization = "COGNITO_USER_POOLS"
+      authorization = "NONE"
     },
   ]
 }

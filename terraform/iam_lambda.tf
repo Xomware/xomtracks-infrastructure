@@ -60,6 +60,21 @@ data "aws_iam_policy_document" "lambda_role_policy" {
     ]
   }
 
+  # SSM (CROSS-NAMESPACE) -- xomify's HS256 signing key. WS-AUTH re-bases
+  # xomtracks' identity onto xomify's user token: the authed handlers validate
+  # the caller's Bearer JWT in-handler with this key (xomify_auth.verify_
+  # xomify_token reads it via ssm_helpers.XOMIFY_API_SECRET_KEY). Scoped to the
+  # single /xomify/api/API_SECRET_KEY parameter -- NOT the whole /xomify/*
+  # namespace. Rotation of xomify's key now couples both apps (documented,
+  # accepted -- PLAN.md WS-AUTH).
+  statement {
+    effect  = "Allow"
+    actions = ["ssm:GetParameter"]
+    resources = [
+      "arn:aws:ssm:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:parameter/xomify/api/API_SECRET_KEY"
+    ]
+  }
+
   # CloudWatch Logs
   statement {
     effect = "Allow"

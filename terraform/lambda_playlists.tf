@@ -24,7 +24,7 @@ locals {
       description   = "On-the-spot: build a public Spotify playlist from a hand-picked selection (authed)"
       path_part     = "create"
       http_method   = "POST"
-      authorization = "COGNITO_USER_POOLS"
+      authorization = "NONE"
     },
   ]
 }
