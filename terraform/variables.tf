@@ -191,9 +191,9 @@ variable "admin_email" {
 # backend as env DEFAULT_OWNER_ID; the backend also hardcodes this same value as
 # its constants.py default so ingest stamping works even before this applies.
 variable "default_owner_id" {
-  description = "Cognito sub of the default/legacy share owner (Dom). Stamped on every legacy row + legacy-auth ingest."
+  description = "Normalized EMAIL of the default/legacy share owner (Dom). Stamped on every legacy row + legacy-auth ingest, and the fallback owner for public /shares/recent. Re-based from the Cognito sub to email in WS-AUTH (identity now keys on the xomify HS256 token's email)."
   type        = string
-  default     = "f4e80448-2061-7059-0c26-d0fd91863568"
+  default     = "dominickj.giordano@gmail.com"
 }
 
 # Read-cutover kill-switch (Phase 1C). When "true", shares_list scopes the feed
