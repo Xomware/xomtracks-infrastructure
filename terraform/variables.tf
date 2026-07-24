@@ -213,6 +213,17 @@ variable "admin_email" {
   default     = "dominickj.giordano@gmail.com"
 }
 
+# Retention window (days) for the admin-portal request-log table
+# (xomtracks-request-log). Written onto each item's `expiresAt` TTL attribute
+# (now + this many days) by the backend so DynamoDB TTL reaps old rows and the
+# GET /admin/calls Scan stays cheap. 21d default (mid 14-30 range). Wired to the
+# backend as env REQUEST_LOG_TTL_DAYS (see locals.tf lambda_variables).
+variable "request_log_ttl_days" {
+  description = "Retention (days) for xomtracks-request-log items via the expiresAt TTL attribute."
+  type        = number
+  default     = 21
+}
+
 # ============================================
 # Multi-tenant / self-serve foundation (Phase 1)
 # ============================================
