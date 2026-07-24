@@ -274,3 +274,55 @@ resource "aws_dynamodb_table" "link_requests" {
 
   tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-link-requests" }))
 }
+
+########################################
+# 6. xomtracks-ingest-tokens  (per-user extractor ingest tokens -- additive, NEW table)
+# PK: tokenHash -- SHA-256 HEX of an opaque random token. The PLAINTEXT token is
+#     returned to the owner exactly ONCE at mint (POST /ingest-tokens/create) and
+#     NEVER stored, so this table holds only irreversible hashes -- a leak exposes
+#     nothing usable.
+# attrs (non-key): ownerId (Cognito sub the ingested shares are stamped with),
+#     createdAt (epoch), revoked (bool), revokedAt (epoch, set on revoke),
+#     lastUsedAt (epoch, best-effort), label (optional human tag).
+#
+# Backs self-serve foundation Phase 3: each user runs their own extractor
+# authenticating with THEIR token, so ingest stamps the right ownerId. Opaque +
+# hashed (NOT a JWT) so tokens are REVOCABLE (flip `revoked` -> resolve_owner
+# returns None) with no signing-key blast radius. resolve_ingest_owner also
+# dual-accepts the legacy single SSM bearer key (-> DEFAULT_OWNER_ID) so Dom's
+# running extractor is unchanged until he re-provisions.
+#
+# No GSI: auth is a GetItem on the tokenHash PK, and revoke is a keyed update on
+# the same PK. Listing a user's tokens (a Scan filtered by ownerId) is a
+# documented fast-follow if a management UI needs it -- not required for the
+# create/revoke flow.
+#
+# Name matches the `${var.app_name}*` ARN prefix the existing lambda_role already
+# grants DynamoDB read/write on (see iam_lambda.tf) -- so NO IAM change is needed,
+# same as xomtracks-ratings/heard/link-requests/users. Standard pattern:
+# PAY_PER_REQUEST + KMS + PITR + standard_tags. See xomtracks-backend/lambdas/
+# common/ingest_tokens.py and docs/features/xomtracks-selfserve/PLAN.md Phase 3.
+########################################
+resource "aws_dynamodb_table" "ingest_tokens" {
+  name           = "${var.app_name}-ingest-tokens"
+  billing_mode   = "PAY_PER_REQUEST"
+  read_capacity  = 0
+  write_capacity = 0
+  hash_key       = "tokenHash"
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_alias.dynamodb.target_key_arn
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  attribute {
+    name = "tokenHash"
+    type = "S"
+  }
+
+  tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-ingest-tokens" }))
+}

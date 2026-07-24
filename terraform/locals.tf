@@ -36,8 +36,12 @@ locals {
     RATINGS_TABLE_NAME           = aws_dynamodb_table.ratings.id
     HEARD_TABLE_NAME             = aws_dynamodb_table.heard.id
     LINK_REQUESTS_TABLE_NAME     = aws_dynamodb_table.link_requests.id
-    APP_SERVICE_USER_EMAIL       = var.app_service_user_email
-    AUTO_HEARD_RATER_EMAIL       = var.auto_heard_rater_email
+    # Per-user extractor ingest tokens (self-serve foundation Phase 3). Stores
+    # only the SHA-256 hash of each token; the ingest handler resolves a
+    # presented token -> ownerId (dual-accepting the legacy SSM key -> Dom).
+    INGEST_TOKENS_TABLE_NAME = aws_dynamodb_table.ingest_tokens.id
+    APP_SERVICE_USER_EMAIL   = var.app_service_user_email
+    AUTO_HEARD_RATER_EMAIL   = var.auto_heard_rater_email
     # Single admin allowed to hit /admin/* (require_admin gates on caller email
     # == this). Also who the phone-link notification email is sent TO.
     ADMIN_EMAIL    = var.admin_email
