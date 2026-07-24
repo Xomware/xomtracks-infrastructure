@@ -32,6 +32,16 @@ locals {
     }
   ]
 
+  ingest_tokens_endpoints = [
+    for l in local.ingest_tokens_lambdas : {
+      name          = l.name
+      path_part     = l.path_part
+      http_method   = l.http_method
+      invoke_arn    = aws_lambda_function.ingest_tokens[l.name].invoke_arn
+      authorization = l.authorization
+    }
+  ]
+
   shares_endpoints = [
     for l in local.shares_lambdas : {
       name          = l.name
@@ -111,12 +121,13 @@ module "api" {
   certificate_arn = aws_acm_certificate_validation.api.certificate_arn
 
   services = {
-    auth      = { path_prefix = "auth", endpoints = local.auth_endpoints }
-    shares    = { path_prefix = "shares", endpoints = local.shares_endpoints }
-    playlists = { path_prefix = "playlists", endpoints = local.playlists_endpoints }
-    me        = { path_prefix = "me", endpoints = local.me_endpoints }
-    ratings   = { path_prefix = "ratings", endpoints = local.ratings_endpoints }
-    heard     = { path_prefix = "heard", endpoints = local.heard_endpoints }
-    admin     = { path_prefix = "admin", endpoints = local.admin_endpoints }
+    auth          = { path_prefix = "auth", endpoints = local.auth_endpoints }
+    ingest_tokens = { path_prefix = "ingest-tokens", endpoints = local.ingest_tokens_endpoints }
+    shares        = { path_prefix = "shares", endpoints = local.shares_endpoints }
+    playlists     = { path_prefix = "playlists", endpoints = local.playlists_endpoints }
+    me            = { path_prefix = "me", endpoints = local.me_endpoints }
+    ratings       = { path_prefix = "ratings", endpoints = local.ratings_endpoints }
+    heard         = { path_prefix = "heard", endpoints = local.heard_endpoints }
+    admin         = { path_prefix = "admin", endpoints = local.admin_endpoints }
   }
 }
