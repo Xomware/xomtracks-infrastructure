@@ -132,6 +132,23 @@ variable "owner" {
 # registration step.
 # ============================================
 
+# Per-user Spotify OAuth (self-serve foundation Phase 2). The frontend callback
+# route Spotify redirects back to after the user approves the consent screen.
+# Published to SSM (/xomtracks/spotify/REDIRECT_URI) and read server-side by
+# BOTH auth_spotify_login (authorize URL) and auth_spotify_callback (code
+# exchange) so the value Spotify sees is always identical.
+#
+# MANUAL DOM STEP: this EXACT URI must be registered as a Redirect URI on the
+# reused xomify Spotify app dashboard, and the connect scopes
+# (playlist-modify-public, playlist-modify-private, ugc-image-upload,
+# user-read-recently-played) enabled -- otherwise the OAuth flow 400s. See the
+# PR description for the exact dashboard steps.
+variable "spotify_redirect_uri" {
+  description = "Spotify OAuth redirect URI (frontend callback). Must be registered on the Spotify app dashboard EXACTLY."
+  type        = string
+  default     = "https://xomtracks.xomware.com/callback"
+}
+
 variable "app_service_user_email" {
   description = "Email key for xomtracks' single Spotify-connected service-account user row (the app plays/searches/builds playlists through this one account -- not a per-browsing-user OAuth flow)."
   type        = string

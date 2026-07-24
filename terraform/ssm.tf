@@ -47,6 +47,29 @@ resource "aws_ssm_parameter" "spotify_client_secret" {
   lifecycle { ignore_changes = [tags, tags_all] }
 }
 
+# SPOTIFY REDIRECT URI -- per-user OAuth (self-serve foundation Phase 2). The
+# frontend callback Spotify redirects back to after the consent screen. Read
+# server-side by auth_spotify_login (authorize URL) + auth_spotify_callback
+# (code exchange) via lambdas/common/ssm_helpers.py's SPOTIFY_REDIRECT_URI, so
+# the value is identical on both Spotify calls (Spotify requires an exact match).
+#
+# NOT a secret (it's a public callback URL), but stored under the SAME
+# /xomtracks/spotify/* path the backend already reads and the lambda_role
+# already grants ssm:GetParameter on -- so NO IAM change is needed. Plain String
+# (not SecureString): a redirect URI is not sensitive and needs no KMS.
+#
+# MANUAL DOM STEP: register this EXACT value as a Redirect URI on the reused
+# xomify Spotify app dashboard (+ enable the connect scopes) before the flow can
+# complete end-to-end. See this PR's description.
+resource "aws_ssm_parameter" "spotify_redirect_uri" {
+  name        = "/${var.app_name}/spotify/REDIRECT_URI"
+  description = "Spotify OAuth redirect URI (frontend callback) -- must match the Spotify app dashboard exactly"
+  type        = "String"
+  value       = var.spotify_redirect_uri
+
+  lifecycle { ignore_changes = [tags, tags_all] }
+}
+
 # SOUNDCLOUD -- MIRRORED from xomcloud's existing scraped client_id, not a
 # new secret. Unlike Spotify's per-app OAuth client_id/secret, this
 # "scraped" credential (extracted from SoundCloud's own web client, per
