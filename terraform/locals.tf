@@ -20,17 +20,24 @@ locals {
   # runtime via boto3, same convention as xomify/xomforms. Only non-secret
   # config (table/index names, Cognito ids) goes in the environment block.
   lambda_variables = {
-    APP_NAME                 = var.app_name
-    DYNAMODB_KMS_ALIAS       = aws_kms_alias.dynamodb.name
-    SHARES_TABLE_NAME        = aws_dynamodb_table.shares.id
-    SHARES_DIRECTION_INDEX   = "direction-messageDate-index"
-    SHARES_SHARER_INDEX      = "sharerHandle-messageDate-index"
-    USERS_TABLE_NAME         = aws_dynamodb_table.users.id
-    RATINGS_TABLE_NAME       = aws_dynamodb_table.ratings.id
-    HEARD_TABLE_NAME         = aws_dynamodb_table.heard.id
-    LINK_REQUESTS_TABLE_NAME = aws_dynamodb_table.link_requests.id
-    APP_SERVICE_USER_EMAIL   = var.app_service_user_email
-    AUTO_HEARD_RATER_EMAIL   = var.auto_heard_rater_email
+    APP_NAME               = var.app_name
+    DYNAMODB_KMS_ALIAS     = aws_kms_alias.dynamodb.name
+    SHARES_TABLE_NAME      = aws_dynamodb_table.shares.id
+    SHARES_DIRECTION_INDEX = "direction-messageDate-index"
+    SHARES_SHARER_INDEX    = "sharerHandle-messageDate-index"
+    # Multi-tenant Phase 1: owner-scoped GSI-3 + the owner key + the read-cutover
+    # kill-switch. DEFAULT_OWNER_ID also has a hardcoded backend default so ingest
+    # stamping works before this env applies; OWNER_SCOPING_ENABLED gates the
+    # /shares/list read cutover (flip to false = instant rollback to GSI-1).
+    SHARES_OWNER_DIRECTION_INDEX = "ownerDirection-messageDate-index"
+    DEFAULT_OWNER_ID             = var.default_owner_id
+    OWNER_SCOPING_ENABLED        = var.owner_scoping_enabled
+    USERS_TABLE_NAME             = aws_dynamodb_table.users.id
+    RATINGS_TABLE_NAME           = aws_dynamodb_table.ratings.id
+    HEARD_TABLE_NAME             = aws_dynamodb_table.heard.id
+    LINK_REQUESTS_TABLE_NAME     = aws_dynamodb_table.link_requests.id
+    APP_SERVICE_USER_EMAIL       = var.app_service_user_email
+    AUTO_HEARD_RATER_EMAIL       = var.auto_heard_rater_email
     # Single admin allowed to hit /admin/* (require_admin gates on caller email
     # == this). Also who the phone-link notification email is sent TO.
     ADMIN_EMAIL    = var.admin_email

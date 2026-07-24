@@ -11,6 +11,15 @@
 #   backend deliberately omits it rather than writing NULL (DynamoDB
 #   rejects NULL on a GSI key attribute), so those rows are correctly
 #   absent from this index rather than erroring on write.
+# GSI-3 ownerDirection-messageDate-index: PK ownerDirection (`<ownerId>#<direction>`),
+#   SK messageDate -- the OWNER-SCOPED time-window browse that makes the app
+#   multi-tenant (self-serve foundation Phase 1). Added ONLINE (additive): on
+#   PAY_PER_REQUEST the backfill absorbs no provisioned capacity, and the index
+#   starts empty/sparse until the ownerId backfill stamps the ~325 legacy rows.
+#   Legacy readers keep GSI-1 (direction) as the instant-rollback path. Sparse
+#   like GSI-2: rows without an ownerId (pre-backfill) omit ownerDirection and
+#   are simply absent from this index. See
+#   docs/features/xomtracks-selfserve/PLAN.md Phase 1.
 ########################################
 resource "aws_dynamodb_table" "shares" {
   name           = "${var.app_name}-shares"
@@ -48,6 +57,11 @@ resource "aws_dynamodb_table" "shares" {
     type = "S"
   }
 
+  attribute {
+    name = "ownerDirection"
+    type = "S"
+  }
+
   global_secondary_index {
     name            = "direction-messageDate-index"
     hash_key        = "direction"
@@ -59,6 +73,15 @@ resource "aws_dynamodb_table" "shares" {
   global_secondary_index {
     name            = "sharerHandle-messageDate-index"
     hash_key        = "sharerHandle"
+    range_key       = "messageDate"
+    projection_type = "ALL"
+  }
+
+  # GSI-3: owner-scoped feed (multi-tenant Phase 1) -- see header comment.
+  # Additive/online add; sparse until the ownerId backfill runs.
+  global_secondary_index {
+    name            = "ownerDirection-messageDate-index"
+    hash_key        = "ownerDirection"
     range_key       = "messageDate"
     projection_type = "ALL"
   }
