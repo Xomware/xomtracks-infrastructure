@@ -164,3 +164,27 @@ variable "admin_email" {
   type        = string
   default     = "dominickj.giordano@gmail.com"
 }
+
+# ============================================
+# Multi-tenant / self-serve foundation (Phase 1)
+# ============================================
+# The Cognito `sub` that every LEGACY (pre-multi-tenant) share and every
+# legacy-auth ingest resolves to -- Dom, sole owner of the ~325 live rows.
+# `sub` is stable + rename-proof. NOT a secret (a user identifier). Wired to the
+# backend as env DEFAULT_OWNER_ID; the backend also hardcodes this same value as
+# its constants.py default so ingest stamping works even before this applies.
+variable "default_owner_id" {
+  description = "Cognito sub of the default/legacy share owner (Dom). Stamped on every legacy row + legacy-auth ingest."
+  type        = string
+  default     = "f4e80448-2061-7059-0c26-d0fd91863568"
+}
+
+# Read-cutover kill-switch (Phase 1C). When "true", shares_list scopes the feed
+# to the caller's OWN ownerId via GSI-3; when "false", the legacy GSI-1 direction
+# query serves everyone (Dom-only pre-multi-tenant behavior). Flip to "false" for
+# an INSTANT revert. Wired to the backend as env OWNER_SCOPING_ENABLED.
+variable "owner_scoping_enabled" {
+  description = "Feature flag: when true, /shares/list scopes to the caller's own ownerId via GSI-3 (multi-tenant). False = legacy GSI-1 path (instant rollback)."
+  type        = string
+  default     = "false"
+}
