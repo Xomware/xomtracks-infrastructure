@@ -34,6 +34,30 @@ locals {
       http_method   = "POST"
       authorization = "NONE"
     },
+    # Per-user Spotify OAuth (self-serve foundation Phase 2). BOTH are
+    # Cognito-authed (unlike the public /auth/login) -- the caller's Cognito
+    # identity (email + sub) binds the CSRF state and owns the stored refresh
+    # token. Folder -> function name via deploy-backend.yml's first-underscore
+    # split: lambdas/auth_spotify_login -> xomtracks-auth-spotify_login,
+    # lambdas/auth_spotify_callback -> xomtracks-auth-spotify_callback (matches
+    # `${app}-auth-${name}` below). Routes: POST /auth/spotify-login,
+    # POST /auth/spotify-callback (module 2-level path: prefix `auth` +
+    # path_part). No IAM change -- lambda_role already grants SSM read on
+    # /xomtracks/* (Spotify creds + REDIRECT_URI) and DynamoDB on xomtracks-users.
+    {
+      name          = "spotify_login"
+      description   = "Start per-user Spotify OAuth -- return the authorize URL + stamp a CSRF state (authed)"
+      path_part     = "spotify-login"
+      http_method   = "POST"
+      authorization = "COGNITO_USER_POOLS"
+    },
+    {
+      name          = "spotify_callback"
+      description   = "Finish per-user Spotify OAuth -- verify state, exchange code, store the owner's refresh token (authed)"
+      path_part     = "spotify-callback"
+      http_method   = "POST"
+      authorization = "COGNITO_USER_POOLS"
+    },
   ]
 
   shares_lambdas = [

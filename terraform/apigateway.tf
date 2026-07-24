@@ -18,7 +18,10 @@ locals {
   # handler via the SSM-scoped bearer key
   # (utility_helpers.require_ingest_bearer_key), not Cognito. The auth/login
   # route is also NONE (it MINTS xomtracks' own Spotify-derived token; it is
-  # not gated by Cognito).
+  # not gated by Cognito). NOTE: the Phase-2 auth/spotify-login +
+  # auth/spotify-callback routes ARE COGNITO_USER_POOLS (per-endpoint
+  # authorization is carried through from local.auth_lambdas) -- the caller's
+  # Cognito identity binds the OAuth CSRF state + owns the stored refresh token.
   auth_endpoints = [
     for l in local.auth_lambdas : {
       name          = l.name
