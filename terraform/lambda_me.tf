@@ -18,6 +18,7 @@
 #   lambdas/me_link_phone -> xomtracks-me-link_phone
 #   lambdas/me_get        -> xomtracks-me-get
 #   lambdas/me_shares     -> xomtracks-me-shares
+#   lambdas/me_playlists  -> xomtracks-me-playlists
 #
 # ROUTE NOTE (GET /me): the backend PR describes this endpoint as `GET /me`,
 # but the api-gateway-service module (v2.7.0) supports exactly two path
@@ -50,6 +51,13 @@ locals {
       name          = "shares"
       description   = "Caller's OWN shares by linked handle, windowed, newest-first (authed)"
       path_part     = "shares"
+      http_method   = "GET"
+      authorization = "NONE"
+    },
+    {
+      name          = "playlists"
+      description   = "Caller's rolling playlists: own pair + Dom's always-visible baseline pair (authed) -- GET /me/playlists"
+      path_part     = "playlists"
       http_method   = "GET"
       authorization = "NONE"
     },
