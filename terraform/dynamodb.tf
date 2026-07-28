@@ -326,3 +326,56 @@ resource "aws_dynamodb_table" "ingest_tokens" {
 
   tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-ingest-tokens" }))
 }
+
+########################################
+# 7. xomtracks-request-log  (admin-portal calls & errors dashboard -- additive, NEW table)
+# PK: id (uuid4). One item per authed API request, written FAIL-OPEN by the shared
+#   request_log hook (xomtracks-backend/lambdas/common/request_log.py) from
+#   errors.handle_errors after the final response is built.
+# attrs (non-key): ts (ISO8601), tsEpoch (int, window filtering), path, method,
+#   status (int), email (caller, or absent), error (message on failure, absent
+#   otherwise), expiresAt (epoch TTL attribute).
+#
+# TTL ENABLED on `expiresAt` (backend writes now + REQUEST_LOG_TTL_DAYS days, ~21d
+# default in the 14-30 range) so DynamoDB reaps old rows and the dashboard Scan
+# (GET /admin/calls) stays cheap. No secrets/token values are ever written -- the
+# backend runs every item through mask_sensitive_data first.
+#
+# No GSI: aggregation is a filtered Scan over the TTL-bounded, low-volume table
+# (personal-app scale, same Scan rationale as the other tables here). A GSI on
+# tsEpoch/path is the documented fast-follow if volume grows.
+#
+# Name matches the `${var.app_name}*` ARN prefix the existing lambda_role already
+# grants DynamoDB read/write on (see iam_lambda.tf) -- so NO IAM change is needed,
+# same as the other additive tables. Standard pattern: PAY_PER_REQUEST + KMS +
+# PITR + standard_tags, PLUS TTL. See docs/features/xomtracks-xomify-merge/PLAN.md
+# WS6.
+########################################
+resource "aws_dynamodb_table" "request_log" {
+  name           = "${var.app_name}-request-log"
+  billing_mode   = "PAY_PER_REQUEST"
+  read_capacity  = 0
+  write_capacity = 0
+  hash_key       = "id"
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_alias.dynamodb.target_key_arn
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  ttl {
+    attribute_name = "expiresAt"
+    enabled        = true
+  }
+
+  attribute {
+    name = "id"
+    type = "S"
+  }
+
+  tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-request-log" }))
+}

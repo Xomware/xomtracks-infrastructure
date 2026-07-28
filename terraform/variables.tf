@@ -85,10 +85,41 @@ variable "api_stage_name" {
   default     = "dev"
 }
 
+# CORS DURABILITY FIX: pinned api-gateway-service module v2.7.0's per-origin
+# echo VTL (module locals.tf `cors_vtl`) is broken at runtime -- it always
+# returns origins_list[0] regardless of the request's actual Origin header, so
+# any origin past the first (e.g. xomify.xomware.com) fails preflight. This
+# was hot-patched live via `aws apigateway update-integration-response` on all
+# 20 OPTIONS methods (rest-api-id l8k1iebex9) to a static
+# Access-Control-Allow-Origin: * with Access-Control-Allow-Credentials
+# dropped. A bare `terraform apply` would otherwise regenerate the broken
+# per-origin template and re-break it.
+#
+# `"*"` is a first-class, module-documented value for `allow_origin` (module
+# README: default `"*"`) -- with a single-entry origins_list, the module's
+# VTL default-assignment line unconditionally emits the literal string "*"
+# and the per-origin #if/echo block never matches (no request Origin header
+# is literally "*"), so the buggy echo logic is never exercised. This is a
+# genuine Terraform-native fix, not a workaround: the module continues to
+# fully own+manage these resources (no dueling aws_api_gateway_integration_response
+# definitions fighting the module's state).
+#
+# The module also hardcodes Access-Control-Allow-Credentials: 'true'
+# unconditionally (no allow_credentials input exists to drop it) -- but per
+# the Fetch/CORS spec, that header is only consulted by browsers when the
+# request's credentials mode is 'include'. Every route here is authorized
+# NONE at the gateway with Bearer-token auth validated in-handler (see
+# apigateway.tf), so no request ever needs `credentials: include` / cookies;
+# the browser ignores Access-Control-Allow-Credentials in that case and a
+# wildcard Access-Control-Allow-Origin is accepted. Functionally equivalent
+# to the live hot-patch for this app's real traffic. Widening CORS to any
+# origin adds no new access-control risk since Origin was never used for
+# authZ at the gateway layer -- the Bearer-token check in-handler is what
+# actually gates access.
 variable "cors_allowed_origins" {
-  description = "Comma-delimited allowed CORS origins for the API. First entry is the default Access-Control-Allow-Origin; additional entries are echoed back via startsWith matching by the api module."
+  description = "CORS Access-Control-Allow-Origin for the API. Static \"*\" (module-documented default) -- see comment above for why this is required instead of a comma-delimited multi-origin list."
   type        = string
-  default     = "https://xomtracks.xomware.com,https://xomify.xomware.com,https://xomware.com,https://www.xomware.com"
+  default     = "*"
 }
 
 # Route53
@@ -180,6 +211,17 @@ variable "admin_email" {
   description = "Cognito login email of the single admin allowed to list/approve/deny phone-link requests (also the notification recipient)."
   type        = string
   default     = "dominickj.giordano@gmail.com"
+}
+
+# Retention window (days) for the admin-portal request-log table
+# (xomtracks-request-log). Written onto each item's `expiresAt` TTL attribute
+# (now + this many days) by the backend so DynamoDB TTL reaps old rows and the
+# GET /admin/calls Scan stays cheap. 21d default (mid 14-30 range). Wired to the
+# backend as env REQUEST_LOG_TTL_DAYS (see locals.tf lambda_variables).
+variable "request_log_ttl_days" {
+  description = "Retention (days) for xomtracks-request-log items via the expiresAt TTL attribute."
+  type        = number
+  default     = 21
 }
 
 # ============================================
