@@ -217,9 +217,12 @@ data "aws_iam_policy_document" "cron_lambda_role_policy" {
     ]
   }
 
-  # Scoped write access -- ONLY the two rolling-playlist-id parameters,
-  # not the whole /xomtracks/* namespace (least privilege: this role never
-  # needs to write Spotify creds, the ingest key, etc).
+  # Scoped write access -- the two rolling-playlist-id parameters (persisted by
+  # the rolling-playlists cron) PLUS the scraped SoundCloud client_id (the
+  # matching-sweep cron self-heals it: on a 401/403 from SoundCloud's resolve
+  # endpoint it scrapes + validates a fresh client_id and PutParameters it back
+  # -- see xomtracks-backend lambdas/common/soundcloud.refresh_client_id). Still
+  # least-privilege: this role never writes Spotify creds, the ingest key, etc.
   statement {
     effect = "Allow"
     actions = [
@@ -227,7 +230,8 @@ data "aws_iam_policy_document" "cron_lambda_role_policy" {
     ]
     resources = [
       aws_ssm_parameter.rolling_in_playlist_id.arn,
-      aws_ssm_parameter.rolling_out_playlist_id.arn
+      aws_ssm_parameter.rolling_out_playlist_id.arn,
+      aws_ssm_parameter.soundcloud_client_id.arn
     ]
   }
 
