@@ -40,9 +40,9 @@ locals {
     },
     {
       name             = "rolling-playlists"
-      description      = "Weekly rebuild of both rolling 'last 30 days' playlists (in + out)"
-      cron_schedule    = "cron(0 11 ? * SAT *)"
-      cron_description = "Triggers xomtracks rolling playlist rebuild every Saturday at 7 AM Eastern (aligned with xomify's release radar cadence)"
+      description      = "Rebuild both rolling 'last 30 days' playlists (in + out) every 6 hours"
+      cron_schedule    = "cron(0 0/6 * * ? *)"
+      cron_description = "Triggers xomtracks rolling playlist rebuild every 6 hours (00/06/12/18 UTC) so newly-shared songs appear promptly, not just weekly"
     },
     {
       name             = "matching-sweep"
