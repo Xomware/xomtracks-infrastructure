@@ -33,9 +33,13 @@ locals {
     DEFAULT_OWNER_ID             = var.default_owner_id
     OWNER_SCOPING_ENABLED        = var.owner_scoping_enabled
     USERS_TABLE_NAME             = aws_dynamodb_table.users.id
-    RATINGS_TABLE_NAME           = aws_dynamodb_table.ratings.id
-    HEARD_TABLE_NAME             = aws_dynamodb_table.heard.id
-    LINK_REQUESTS_TABLE_NAME     = aws_dynamodb_table.link_requests.id
+    # Read-only: reuse the caller's already-granted xomify Spotify token on
+    # Shares opt-in so the rolling cron can build their own playlists (no second
+    # OAuth). See ensure_spotify_connection_from_xomify + the GetItem grant.
+    XOMIFY_USERS_TABLE_NAME  = var.xomify_users_table_name
+    RATINGS_TABLE_NAME       = aws_dynamodb_table.ratings.id
+    HEARD_TABLE_NAME         = aws_dynamodb_table.heard.id
+    LINK_REQUESTS_TABLE_NAME = aws_dynamodb_table.link_requests.id
     # Per-user extractor ingest tokens (self-serve foundation Phase 3). Stores
     # only the SHA-256 hash of each token; the ingest handler resolves a
     # presented token -> ownerId (dual-accepting the legacy SSM key -> Dom).

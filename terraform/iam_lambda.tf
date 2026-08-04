@@ -158,6 +158,20 @@ data "aws_iam_policy_document" "lambda_role_policy" {
     ]
   }
 
+  # DynamoDB -- READ-ONLY on the SIBLING xomify-users table. A self-serve user
+  # already granted Spotify at xomify sign-in; xomtracks reuses xomify's Spotify
+  # app, so on opt-in we copy that refreshToken onto their xomtracks-users row so
+  # the rolling-playlist cron can build their OWN playlists (no second OAuth --
+  # see dynamo_helpers.ensure_spotify_connection_from_xomify). GetItem ONLY, on
+  # that one table -- deliberately narrower than the xomtracks* grant above.
+  statement {
+    effect  = "Allow"
+    actions = ["dynamodb:GetItem"]
+    resources = [
+      "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.web_app_account.account_id}:table/${var.xomify_users_table_name}"
+    ]
+  }
+
   # SES -- send admin notification emails for the phone-link approval flow
   # (POST /me/link-phone -> email Dom). Scoped to xomtracks' OWN domain
   # identity + configuration set (see ses.tf); the FromEmailAddress condition
