@@ -1,8 +1,22 @@
-## API Gateway Account (account-level singleton)
-
-resource "aws_api_gateway_account" "api_gateway_account" {
-  cloudwatch_role_arn = aws_iam_role.api_gateway_cloudwatch.arn
-}
+## API Gateway Account (account-level singleton) — INTENTIONALLY NOT MANAGED HERE
+#
+# `aws_api_gateway_account` is ONE setting per AWS account per region. Multiple
+# app repos in this account (xomtracks, xomforms, …) were each managing it and
+# each pointing `cloudwatch_role_arn` at their OWN `<app>-api_gateway-logs`
+# role — so every apply from either repo flipped the account's logging role
+# back and forth (xomforms-api_gateway-logs <-> xomtracks-api_gateway-logs),
+# showing as perpetual drift on every plan.
+#
+# A shared account-level singleton must have a SINGLE owner. xomtracks defers
+# ownership: it no longer declares this resource, so its applies stop churning
+# it. Removing this resource is safe — the AWS provider's destroy of
+# `aws_api_gateway_account` is a no-op (there is no AWS API to reset account
+# settings), so the LIVE cloudwatch_role_arn is left intact; it just drops out
+# of xomtracks' state. The `api_gateway_cloudwatch` role below is retained so
+# that live pointer stays valid until the owning repo reconciles it.
+#
+# Long-term home: this belongs in the shared `xomware-infrastructure` bootstrap
+# (the same repo that owns the shared Cognito pool), not per-app.
 
 #**********************
 # API Gateway (via reusable module)
