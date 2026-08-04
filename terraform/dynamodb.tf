@@ -328,6 +328,48 @@ resource "aws_dynamodb_table" "ingest_tokens" {
 }
 
 ########################################
+# 6b. xomtracks-ingest-runs  (compact extractor run telemetry)
+# PK: ownerId (email), SK: runAt (epoch). One row per scan cycle, written by
+# POST /ingest/run. attrs: scanned, ingested, newWatermark, durationMs,
+# expiresAt (epoch TTL = runAt + INGEST_RUNS_TTL_DAYS). Backs GET /admin/runs.
+# Query on the PK (ScanIndexForward=False) for recent-first per owner.
+########################################
+resource "aws_dynamodb_table" "ingest_runs" {
+  name           = "${var.app_name}-ingest-runs"
+  billing_mode   = "PAY_PER_REQUEST"
+  read_capacity  = 0
+  write_capacity = 0
+  hash_key       = "ownerId"
+  range_key      = "runAt"
+
+  server_side_encryption {
+    enabled     = true
+    kms_key_arn = aws_kms_alias.dynamodb.target_key_arn
+  }
+
+  point_in_time_recovery {
+    enabled = true
+  }
+
+  attribute {
+    name = "ownerId"
+    type = "S"
+  }
+
+  attribute {
+    name = "runAt"
+    type = "N"
+  }
+
+  ttl {
+    attribute_name = "expiresAt"
+    enabled        = true
+  }
+
+  tags = merge(local.standard_tags, tomap({ "name" = "${var.app_name}-ingest-runs" }))
+}
+
+########################################
 # 7. xomtracks-request-log  (admin-portal calls & errors dashboard -- additive, NEW table)
 # PK: id (uuid4). One item per authed API request, written FAIL-OPEN by the shared
 #   request_log hook (xomtracks-backend/lambdas/common/request_log.py) from

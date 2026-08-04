@@ -63,6 +63,16 @@ locals {
     }
   ]
 
+  ingest_endpoints = [
+    for l in local.ingest_lambdas : {
+      name          = l.name
+      path_part     = l.path_part
+      http_method   = l.http_method
+      invoke_arn    = aws_lambda_function.ingest[l.name].invoke_arn
+      authorization = l.authorization
+    }
+  ]
+
   playlists_endpoints = [
     for l in local.playlists_lambdas : {
       name          = l.name
@@ -135,6 +145,7 @@ module "api" {
     auth          = { path_prefix = "auth", endpoints = local.auth_endpoints }
     ingest_tokens = { path_prefix = "ingest-tokens", endpoints = local.ingest_tokens_endpoints }
     shares        = { path_prefix = "shares", endpoints = local.shares_endpoints }
+    ingest        = { path_prefix = "ingest", endpoints = local.ingest_endpoints }
     playlists     = { path_prefix = "playlists", endpoints = local.playlists_endpoints }
     me            = { path_prefix = "me", endpoints = local.me_endpoints }
     ratings       = { path_prefix = "ratings", endpoints = local.ratings_endpoints }

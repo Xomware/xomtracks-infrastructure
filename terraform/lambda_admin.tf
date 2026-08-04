@@ -64,6 +64,13 @@ locals {
       authorization = "NONE"
     },
     {
+      name          = "runs"
+      description   = "Recent extractor run summaries grouped by owner (admin-gated) -- GET /admin/runs"
+      path_part     = "runs"
+      http_method   = "GET"
+      authorization = "NONE"
+    },
+    {
       name          = "approve"
       description   = "Approve a pending link request -- creates the real link + marks approved (admin-gated) -- POST /admin/approve"
       path_part     = "approve"

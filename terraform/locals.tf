@@ -44,6 +44,10 @@ locals {
     # only the SHA-256 hash of each token; the ingest handler resolves a
     # presented token -> ownerId (dual-accepting the legacy SSM key -> Dom).
     INGEST_TOKENS_TABLE_NAME = aws_dynamodb_table.ingest_tokens.id
+    # Compact per-scan run telemetry (POST /ingest/run -> GET /admin/runs).
+    # TTL'd so history self-prunes; table covered by the xomtracks* IAM prefix.
+    INGEST_RUNS_TABLE_NAME = aws_dynamodb_table.ingest_runs.id
+    INGEST_RUNS_TTL_DAYS   = "90"
     # Admin-portal calls & errors dashboard (WS6). TTL'd request-log table +
     # its retention window. The shared request_log hook writes one item per
     # authed request (fail-open); GET /admin/calls aggregates it. IAM already
