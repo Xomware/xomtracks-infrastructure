@@ -247,3 +247,13 @@ variable "owner_scoping_enabled" {
   type        = string
   default     = "true"
 }
+
+# The SIBLING xomify app's users table (same AWS account, keyed by the same
+# email). xomtracks reads it READ-ONLY to reuse a self-serve user's already
+# -granted Spotify refreshToken on opt-in (no second OAuth) -- see
+# ensure_spotify_connection_from_xomify + the GetItem grant in iam_lambda.tf.
+variable "xomify_users_table_name" {
+  description = "Name of the sibling xomify-users DynamoDB table (read-only, for reusing the user's Spotify token on Shares opt-in)."
+  type        = string
+  default     = "xomify-users"
+}
