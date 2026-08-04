@@ -67,11 +67,15 @@ locals {
   # bound to (and the scope that revoke checks). Folder -> function name via
   # deploy-backend.yml's first-underscore split: lambdas/ingesttokens_create ->
   # xomtracks-ingesttokens-create, lambdas/ingesttokens_revoke ->
-  # xomtracks-ingesttokens-revoke (matches `${app}-ingesttokens-${name}` below).
-  # Routes: POST /ingest-tokens/create, POST /ingest-tokens/revoke (module
-  # 2-level path: prefix `ingest-tokens` + path_part). No IAM change -- the
-  # lambda_role already grants DynamoDB on xomtracks-ingest-tokens (name matches
-  # the xomtracks* prefix); the mint/revoke handlers use no SSM.
+  # xomtracks-ingesttokens-revoke, lambdas/ingesttokens_list ->
+  # xomtracks-ingesttokens-list (matches `${app}-ingesttokens-${name}` below).
+  # Routes: POST /ingest-tokens/create, POST /ingest-tokens/revoke,
+  # GET /ingest-tokens/list (module 2-level path: prefix `ingest-tokens` +
+  # path_part). No IAM change -- the lambda_role already grants DynamoDB on
+  # xomtracks-ingest-tokens (name matches the xomtracks* prefix); the
+  # mint/revoke/list handlers use no SSM. `list` is caller-scoped (the handler
+  # filters to the caller's ownerId) and read-only -- the shared role's DynamoDB
+  # GetItem/Query on xomtracks* covers it, same as revoke.
   ingest_tokens_lambdas = [
     {
       name          = "create"
@@ -85,6 +89,13 @@ locals {
       description   = "Revoke one of the caller's ingest tokens by hash (or plaintext), scoped to the caller's ownerId (authed)"
       path_part     = "revoke"
       http_method   = "POST"
+      authorization = "NONE"
+    },
+    {
+      name          = "list"
+      description   = "List the caller's ingest tokens (hash + metadata, no plaintext), scoped to the caller's ownerId (authed)"
+      path_part     = "list"
+      http_method   = "GET"
       authorization = "NONE"
     },
   ]
