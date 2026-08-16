@@ -22,11 +22,12 @@
 #   docs/features/xomtracks-selfserve/PLAN.md Phase 1.
 ########################################
 resource "aws_dynamodb_table" "shares" {
-  name           = "${var.app_name}-shares"
-  billing_mode   = "PAY_PER_REQUEST"
-  read_capacity  = 0
-  write_capacity = 0
-  hash_key       = "shareId"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-shares"
+  billing_mode                = "PAY_PER_REQUEST"
+  read_capacity               = 0
+  write_capacity              = 0
+  hash_key                    = "shareId"
 
   server_side_encryption {
     enabled     = true
@@ -102,11 +103,12 @@ resource "aws_dynamodb_table" "shares" {
 # target of spotify.py's `_persist_rotated_refresh_token`.
 ########################################
 resource "aws_dynamodb_table" "users" {
-  name           = "${var.app_name}-users"
-  billing_mode   = "PAY_PER_REQUEST"
-  read_capacity  = 0
-  write_capacity = 0
-  hash_key       = "email"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-users"
+  billing_mode                = "PAY_PER_REQUEST"
+  read_capacity               = 0
+  write_capacity              = 0
+  hash_key                    = "email"
 
   server_side_encryption {
     enabled     = true
@@ -148,12 +150,13 @@ resource "aws_dynamodb_table" "users" {
 # PITR + standard_tags.
 ########################################
 resource "aws_dynamodb_table" "ratings" {
-  name           = "${var.app_name}-ratings"
-  billing_mode   = "PAY_PER_REQUEST"
-  read_capacity  = 0
-  write_capacity = 0
-  hash_key       = "trackKey"
-  range_key      = "raterEmail"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-ratings"
+  billing_mode                = "PAY_PER_REQUEST"
+  read_capacity               = 0
+  write_capacity              = 0
+  hash_key                    = "trackKey"
+  range_key                   = "raterEmail"
 
   server_side_encryption {
     enabled     = true
@@ -198,12 +201,13 @@ resource "aws_dynamodb_table" "ratings" {
 # PAY_PER_REQUEST + KMS + PITR + standard_tags.
 ########################################
 resource "aws_dynamodb_table" "heard" {
-  name           = "${var.app_name}-heard"
-  billing_mode   = "PAY_PER_REQUEST"
-  read_capacity  = 0
-  write_capacity = 0
-  hash_key       = "trackKey"
-  range_key      = "raterEmail"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-heard"
+  billing_mode                = "PAY_PER_REQUEST"
+  read_capacity               = 0
+  write_capacity              = 0
+  hash_key                    = "trackKey"
+  range_key                   = "raterEmail"
 
   server_side_encryption {
     enabled     = true
@@ -252,11 +256,12 @@ resource "aws_dynamodb_table" "heard" {
 # PAY_PER_REQUEST + KMS + PITR + standard_tags.
 ########################################
 resource "aws_dynamodb_table" "link_requests" {
-  name           = "${var.app_name}-link-requests"
-  billing_mode   = "PAY_PER_REQUEST"
-  read_capacity  = 0
-  write_capacity = 0
-  hash_key       = "requestId"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-link-requests"
+  billing_mode                = "PAY_PER_REQUEST"
+  read_capacity               = 0
+  write_capacity              = 0
+  hash_key                    = "requestId"
 
   server_side_encryption {
     enabled     = true
@@ -304,11 +309,12 @@ resource "aws_dynamodb_table" "link_requests" {
 # common/ingest_tokens.py and docs/features/xomtracks-selfserve/PLAN.md Phase 3.
 ########################################
 resource "aws_dynamodb_table" "ingest_tokens" {
-  name           = "${var.app_name}-ingest-tokens"
-  billing_mode   = "PAY_PER_REQUEST"
-  read_capacity  = 0
-  write_capacity = 0
-  hash_key       = "tokenHash"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-ingest-tokens"
+  billing_mode                = "PAY_PER_REQUEST"
+  read_capacity               = 0
+  write_capacity              = 0
+  hash_key                    = "tokenHash"
 
   server_side_encryption {
     enabled     = true
@@ -335,12 +341,13 @@ resource "aws_dynamodb_table" "ingest_tokens" {
 # Query on the PK (ScanIndexForward=False) for recent-first per owner.
 ########################################
 resource "aws_dynamodb_table" "ingest_runs" {
-  name           = "${var.app_name}-ingest-runs"
-  billing_mode   = "PAY_PER_REQUEST"
-  read_capacity  = 0
-  write_capacity = 0
-  hash_key       = "ownerId"
-  range_key      = "runAt"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-ingest-runs"
+  billing_mode                = "PAY_PER_REQUEST"
+  read_capacity               = 0
+  write_capacity              = 0
+  hash_key                    = "ownerId"
+  range_key                   = "runAt"
 
   server_side_encryption {
     enabled     = true
@@ -394,11 +401,12 @@ resource "aws_dynamodb_table" "ingest_runs" {
 # WS6.
 ########################################
 resource "aws_dynamodb_table" "request_log" {
-  name           = "${var.app_name}-request-log"
-  billing_mode   = "PAY_PER_REQUEST"
-  read_capacity  = 0
-  write_capacity = 0
-  hash_key       = "id"
+  deletion_protection_enabled = true
+  name                        = "${var.app_name}-request-log"
+  billing_mode                = "PAY_PER_REQUEST"
+  read_capacity               = 0
+  write_capacity              = 0
+  hash_key                    = "id"
 
   server_side_encryption {
     enabled     = true
