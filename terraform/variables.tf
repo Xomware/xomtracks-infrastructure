@@ -258,14 +258,25 @@ variable "xomify_users_table_name" {
   default     = "xomify-users"
 }
 
-variable "github_frontend_repo" {
-  description = "owner/repo whose GitHub Actions may assume the frontend deploy role"
-  type        = string
-  default     = "Xomware/xomtracks-frontend"
+# Read these off the repo, never build them from a name:
+#   gh api /repos/<org>/<repo>/actions/oidc/customization/sub -q .sub_claim_prefix
+# GitHub uses immutable numeric identifiers on newer repos, and it reports the
+# repo's CURRENT name -- several Xomware repos have been renamed since creation.
+
+variable "github_frontend_subjects" {
+  description = "OIDC subject prefixes allowed to assume the frontend deploy role"
+  type        = list(string)
+  default = [
+    "repo:Xomware/xomtracks-frontend",
+    "repo:Xomware@263047999/xomtracks-frontend@1307126928",
+  ]
 }
 
-variable "github_backend_repo" {
-  description = "owner/repo whose GitHub Actions may assume the backend deploy role"
-  type        = string
-  default     = "Xomware/xomtracks-backend"
+variable "github_backend_subjects" {
+  description = "OIDC subject prefixes allowed to assume the backend deploy role"
+  type        = list(string)
+  default = [
+    "repo:Xomware/xomtracks-backend",
+    "repo:Xomware@263047999/xomtracks-backend@1307126910",
+  ]
 }
