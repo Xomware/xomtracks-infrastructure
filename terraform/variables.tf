@@ -257,3 +257,15 @@ variable "xomify_users_table_name" {
   type        = string
   default     = "xomify-users"
 }
+
+variable "github_frontend_repo" {
+  description = "owner/repo whose GitHub Actions may assume the frontend deploy role"
+  type        = string
+  default     = "Xomware/xomtracks-frontend"
+}
+
+variable "github_backend_repo" {
+  description = "owner/repo whose GitHub Actions may assume the backend deploy role"
+  type        = string
+  default     = "Xomware/xomtracks-backend"
+}
