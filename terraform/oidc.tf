@@ -86,10 +86,15 @@ data "aws_iam_policy_document" "github_actions_frontend" {
     resources = ["*"]
   }
 
+  # GetInvalidation as well as Create: this deploy WAITS for the invalidation
+  # to finish rather than firing and forgetting, so it polls.
   statement {
-    sid       = "InvalidateCache"
-    effect    = "Allow"
-    actions   = ["cloudfront:CreateInvalidation"]
+    sid    = "InvalidateCache"
+    effect = "Allow"
+    actions = [
+      "cloudfront:CreateInvalidation",
+      "cloudfront:GetInvalidation",
+    ]
     resources = [aws_cloudfront_distribution.site.arn]
   }
 
