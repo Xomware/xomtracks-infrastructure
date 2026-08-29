@@ -280,3 +280,18 @@ variable "github_backend_subjects" {
     "repo:Xomware@263047999/xomtracks-backend@1307126910",
   ]
 }
+
+variable "github_infrastructure_subjects" {
+  description = "OIDC subject prefixes for this infrastructure repository"
+  type        = list(string)
+  default = [
+    "repo:Xomware/xomtracks-infrastructure",
+    "repo:Xomware@263047999/xomtracks-infrastructure@1307126941",
+  ]
+}
+
+variable "default_branch" {
+  description = "Branch a push to which is allowed to run terraform apply"
+  type        = string
+  default     = "master"
+}
